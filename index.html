@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>金坊科技股份有限公司 | 網路架構・資訊安全・系統整合與專業維運服務</title>
+    <meta name="description" content="金坊科技提供從規劃到維運最可靠的資訊環境。專注於網路基礎工程、硬體採購、系統整合優化、資訊安全、完工案例展示及智慧家電網路規劃。">
+    
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0f172a', // 更深邃的高級石板黑藍 (Slate 900)
+                        secondary: '#0284c7', // 亮眼資訊藍
+                        accent: '#38bdf8', // 點綴亮藍
+                        premium: '#e2e8f0', // 高質感亮灰
+                        dark: '#020617', // 極致黑
+                        light: '#f8fafc'
+                    },
+                    boxShadow: {
+                        'glow': '0 0 15px rgba(2, 132, 199, 0.5)',
+                        'glow-lg': '0 0 25px rgba(2, 132, 199, 0.6)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* ================= SPA 邏輯與基礎設定 ================= */
+        .page-content {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .page-content.active {
+            display: block;
+            opacity: 1;
+            animation: fadeInPage 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        @keyframes fadeInPage {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        main { min-height: calc(100vh - 80px - 100px); }
+        .h-full-card { height: 100%; display: flex; flex-direction: column; }
+        .flex-grow-content { flex-grow: 1; }
+
+        /* ================= 高級按鈕動效 (金屬掃光 & 呼吸) ================= */
+        .btn-premium-glow {
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            transition: all 0.3s ease;
+        }
+        .btn-premium-glow::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 50%; height: 100%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
+            transform: skewX(-25deg);
+            animation: shine 4s infinite cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: -1;
+        }
+        .btn-premium-glow:hover {
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.6);
+            transform: translateY(-2px);
+        }
+        @keyframes shine {
+            0% { left: -100%; }
+            20% { left: 200%; }
+            100% { left: 200%; }
+        }
+
+        /* ================= 跑馬燈動效 (合作廠商) ================= */
+        .marquee-container {
+            display: flex;
+            overflow: hidden;
+            width: 100%;
+            mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+        }
+        .marquee-content {
+            display: flex;
+            align-items: center;
+            animation: marqueeScroll 30s linear infinite;
+        }
+        .marquee-content:hover {
+            animation-play-state: paused;
+        }
+        @keyframes marqueeScroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        
+        .partner-logo {
+            filter: grayscale(100%) opacity(0.6);
+            transition: all 0.3s ease;
+        }
+        .partner-logo:hover {
+            filter: grayscale(0%) opacity(1);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="font-sans text-slate-800 antialiased bg-light flex flex-col min-h-screen">
+
+    <!-- 導覽列 (Header) -->
+    <header class="fixed w-full bg-white/90 backdrop-blur-md shadow-sm z-50 border-b border-slate-200/50 transition-all">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center">
+                    <a href="#home" class="text-xl md:text-2xl font-black text-primary tracking-wider flex items-center gap-2">
+                        <div class="bg-secondary p-1.5 rounded-lg shadow-glow">
+                            <i data-lucide="shield-check" class="text-white w-6 h-6"></i>
+                        </div>
+                        金坊科技
+                    </a>
+                </div>
+                <!-- 桌面版選單 -->
+                <nav class="hidden lg:flex items-center space-x-5 xl:space-x-7" id="desktop-nav">
+                    <a href="#home" class="nav-link text-slate-600 hover:text-secondary font-medium transition-colors">首頁</a>
+                    <a href="#about" class="nav-link text-slate-600 hover:text-secondary font-medium transition-colors">企業簡介</a>
+                    <a href="#services" class="nav-link text-slate-600 hover:text-secondary font-medium transition-colors">專業服務</a>
+                    <a href="#hardware" class="nav-link text-slate-600 hover:text-secondary font-medium transition-colors">硬體設備</a>
+                    <a href="#smart-home" class="nav-link text-slate-600 hover:text-secondary font-medium transition-colors">智慧空間</a>
+                    <a href="#cases" class="nav-link text-slate-600 hover:text-secondary font-medium transition-colors">完工實績</a>
+                    <a href="#insights" class="nav-link text-slate-600 hover:text-secondary font-medium transition-colors">資訊精選文</a>
+                    <!-- 高級感聯絡按鈕 -->
+                    <a href="#contact" class="btn-premium-glow bg-primary text-white px-5 py-2.5 rounded-md font-bold tracking-wide flex items-center gap-2">
+                        聯絡專家 <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </a>
+                </nav>
+                <!-- 手機版選單按鈕 -->
+                <div class="lg:hidden flex items-center">
+                    <button id="mobile-menu-btn" class="text-slate-600 hover:text-primary focus:outline-none">
+                        <i data-lucide="menu" class="w-7 h-7"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- 手機版選單 -->
+        <div id="mobile-menu" class="hidden lg:hidden bg-white/95 backdrop-blur-md border-t border-slate-100 shadow-xl absolute w-full">
+            <div class="px-4 pt-2 pb-6 space-y-2" id="mobile-nav">
+                <a href="#home" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-secondary hover:bg-slate-50 rounded-md">首頁</a>
+                <a href="#about" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-secondary hover:bg-slate-50 rounded-md">企業簡介</a>
+                <a href="#services" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-secondary hover:bg-slate-50 rounded-md">專業服務</a>
+                <a href="#hardware" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-secondary hover:bg-slate-50 rounded-md">硬體設備</a>
+                <a href="#smart-home" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-secondary hover:bg-slate-50 rounded-md">智慧空間</a>
+                <a href="#cases" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-secondary hover:bg-slate-50 rounded-md">完工實績</a>
+                <a href="#insights" class="block px-3 py-3 text-base font-medium text-slate-700 hover:text-secondary hover:bg-slate-50 rounded-md">資訊精選文</a>
+                <a href="#contact" class="block px-3 py-3 text-base font-bold text-white bg-primary text-center rounded-md mt-4 shadow-md">聯絡專家</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主內容區塊 (動態切換) -->
+    <main class="pt-20 flex-grow">
+        
+        <!-- ==================== 首頁 (Home) ==================== -->
+        <article id="page-home" class="page-content active">
+            <!-- Hero Section -->
+            <section class="py-24 lg:py-40 bg-dark relative overflow-hidden">
+                <div class="absolute inset-0 opacity-25 bg-[url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center mix-blend-overlay"></div>
+                <div class="absolute inset-0 bg-gradient-to-br from-primary/95 via-dark/95 to-slate-900/90"></div>
+                
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+                    <span class="text-accent font-bold tracking-[0.2em] uppercase mb-6 block text-sm border border-accent/30 inline-block px-4 py-1.5 rounded-full bg-accent/10 backdrop-blur-sm">
+                        Enterprise IT & Security Solutions
+                    </span>
+                    <h1 class="text-4xl md:text-6xl lg:text-7xl font-extrabold text-white tracking-tight mb-8 leading-tight">
+                        從基礎規劃到永續維運<br class="hidden sm:block" />
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-accent via-blue-200 to-white">建構最可靠的資訊核心</span>
+                    </h1>
+                    <p class="mt-4 max-w-2xl mx-auto text-lg md:text-xl text-slate-300 mb-12 font-light">
+                        專注於企業級網路架構、頂尖資訊安全防護，與次世代智慧空間整合。金坊科技的專業系統顧問，為您打造無懈可擊的安全連線環境。
+                    </p>
+                    <div class="flex flex-col sm:flex-row justify-center gap-6">
+                        <a href="#contact" class="btn-premium-glow bg-secondary text-white px-10 py-4 rounded-lg text-lg font-bold shadow-glow flex items-center justify-center">
+                            啟動專案諮詢 <i data-lucide="arrow-right" class="w-5 h-5 ml-2"></i>
+                        </a>
+                        <a href="#cases" class="bg-transparent text-white border border-slate-500 hover:border-white px-10 py-4 rounded-lg text-lg font-medium hover:bg-white/5 transition-all duration-300 flex items-center justify-center">
+                            瀏覽完工實績
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quick Features -->
+            <section class="py-20 bg-white">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+                        <div class="group cursor-default">
+                            <div class="w-20 h-20 bg-slate-50 border border-slate-100 group-hover:bg-blue-50 group-hover:border-blue-100 text-secondary rounded-2xl flex items-center justify-center mx-auto mb-6 transition-all duration-300 transform group-hover:-translate-y-1 shadow-sm"><i data-lucide="shield-check" class="w-10 h-10"></i></div>
+                            <h3 class="text-2xl font-bold text-dark mb-3">企業級資安防護</h3>
+                            <p class="text-slate-500 leading-relaxed">導入零信任架構，從防火牆部署到端點防禦，徹底阻絕進階威脅與勒索軟體，捍衛企業核心數位資產。</p>
+                        </div>
+                        <div class="group cursor-default">
+                            <div class="w-20 h-20 bg-slate-50 border border-slate-100 group-hover:bg-blue-50 group-hover:border-blue-100 text-secondary rounded-2xl flex items-center justify-center mx-auto mb-6 transition-all duration-300 transform group-hover:-translate-y-1 shadow-sm"><i data-lucide="network" class="w-10 h-10"></i></div>
+                            <h3 class="text-2xl font-bold text-dark mb-3">高可用網路架構</h3>
+                            <p class="text-slate-500 leading-relaxed">重塑底層基石，解決連線延遲與斷線痛點。提供 SD-WAN、高效能負載平衡與無死角 Wi-Fi 6 方案。</p>
+                        </div>
+                        <div class="group cursor-default">
+                            <div class="w-20 h-20 bg-slate-50 border border-slate-100 group-hover:bg-blue-50 group-hover:border-blue-100 text-secondary rounded-2xl flex items-center justify-center mx-auto mb-6 transition-all duration-300 transform group-hover:-translate-y-1 shadow-sm"><i data-lucide="cpu" class="w-10 h-10"></i></div>
+                            <h3 class="text-2xl font-bold text-dark mb-3">智慧空間整合</h3>
+                            <p class="text-slate-500 leading-relaxed">專屬網路規劃師量身訂製，從商辦自動化到百坪豪宅智慧家電整合，實現流暢且安全的互聯網體驗。</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= 首頁擴充：我們能提供什麼 ================= -->
+            <section class="py-24 bg-slate-50 border-t border-slate-200">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="text-center mb-16">
+                        <span class="text-secondary font-bold tracking-[0.15em] text-sm mb-3 block uppercase">What We Provide</span>
+                        <h2 class="text-3xl md:text-4xl font-extrabold text-dark mb-4">我們能為您提供什麼？</h2>
+                        <p class="text-lg text-slate-500 max-w-3xl mx-auto">不只是單純的設備買賣，我們為您建構的是從無到有的完整資訊生態系。一站式解決所有 IT 煩惱。</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
+                        <!-- 提供 1 -->
+                        <div class="bg-white p-8 lg:p-10 rounded-3xl shadow-md border border-slate-100 flex items-start group hover:border-secondary/50 transition-colors">
+                            <div class="p-4 bg-blue-50 rounded-2xl text-secondary mr-6 group-hover:scale-110 transition-transform"><i data-lucide="shopping-cart" class="w-8 h-8"></i></div>
+                            <div>
+                                <h4 class="text-2xl font-bold text-dark mb-3">全球頂尖硬體採購</h4>
+                                <p class="text-slate-600 leading-relaxed">嚴選 Cisco、Fortinet、Dell 等國際一線大廠設備。從商用筆電、伺服器到企業級防火牆，提供最具性價比的企業採購方案。</p>
+                                <a href="#hardware" class="inline-flex items-center text-secondary font-bold mt-4 hover:text-primary transition-colors">瀏覽硬體設備 <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i></a>
+                            </div>
+                        </div>
+                        <!-- 提供 2 -->
+                        <div class="bg-white p-8 lg:p-10 rounded-3xl shadow-md border border-slate-100 flex items-start group hover:border-secondary/50 transition-colors">
+                            <div class="p-4 bg-indigo-50 rounded-2xl text-indigo-600 mr-6 group-hover:scale-110 transition-transform"><i data-lucide="layout-template" class="w-8 h-8"></i></div>
+                            <div>
+                                <h4 class="text-2xl font-bold text-dark mb-3">專業 IT 架構規劃</h4>
+                                <p class="text-slate-600 leading-relaxed">針對您的預算與企業規模（從中小企業到跨國廠辦），由資深架構師繪製客製化的網路藍圖與資安防禦策略。</p>
+                            </div>
+                        </div>
+                        <!-- 提供 3 -->
+                        <div class="bg-white p-8 lg:p-10 rounded-3xl shadow-md border border-slate-100 flex items-start group hover:border-secondary/50 transition-colors">
+                            <div class="p-4 bg-emerald-50 rounded-2xl text-emerald-600 mr-6 group-hover:scale-110 transition-transform"><i data-lucide="blocks" class="w-8 h-8"></i></div>
+                            <div>
+                                <h4 class="text-2xl font-bold text-dark mb-3">系統無縫整合建置</h4>
+                                <p class="text-slate-600 leading-relaxed">具備深厚的弱電與網路工程實力。無論是新建機房、網路線路重整或是雲地混合架構導入，保證無痛上線。</p>
+                            </div>
+                        </div>
+                        <!-- 提供 4 -->
+                        <div class="bg-white p-8 lg:p-10 rounded-3xl shadow-md border border-slate-100 flex items-start group hover:border-secondary/50 transition-colors">
+                            <div class="p-4 bg-amber-50 rounded-2xl text-amber-600 mr-6 group-hover:scale-110 transition-transform"><i data-lucide="headset" class="w-8 h-8"></i></div>
+                            <div>
+                                <h4 class="text-2xl font-bold text-dark mb-3">全天候 IT 維運顧問</h4>
+                                <p class="text-slate-600 leading-relaxed">提供中小企業 IT 外包服務與 7x24 小時遠端監控。當系統出現異常時，第一時間為您排除障礙，確保營運不中斷。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= 首頁最下方：合作廠商跑馬燈 ================= -->
+            <section class="py-16 bg-light border-b border-slate-200">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 text-center">
+                    <h3 class="text-sm font-bold tracking-[0.15em] text-slate-400 uppercase">Trusted by Global Tech Leaders</h3>
+                    <p class="text-dark font-bold text-xl mt-2">全球頂尖技術合作夥伴</p>
+                </div>
+                
+                <div class="marquee-container py-4">
+                    <div class="marquee-content space-x-12 md:space-x-24 px-12">
+                        <span class="text-3xl font-black text-slate-400 tracking-wider partner-logo">CISCO</span>
+                        <span class="text-3xl font-bold text-slate-400 tracking-wide partner-logo">FORTINET</span>
+                        <span class="text-3xl font-bold text-slate-400 partner-logo">Synology</span>
+                        <span class="text-3xl font-black text-slate-400 tracking-widest partner-logo">DELL</span>
+                        <span class="text-3xl font-bold text-slate-400 partner-logo">vmware</span>
+                        <span class="text-3xl font-bold text-slate-400 partner-logo">RUCKUS</span>
+                        <span class="text-3xl font-black text-slate-400 tracking-widest partner-logo">HPE</span>
+                        <span class="text-3xl font-bold text-slate-400 partner-logo text-center leading-none">SUPER<br/><span class="text-xl">MICRO</span></span>
+                        
+                        <!-- 重複 -->
+                        <span class="text-3xl font-black text-slate-400 tracking-wider partner-logo ml-12 md:ml-24">CISCO</span>
+                        <span class="text-3xl font-bold text-slate-400 tracking-wide partner-logo">FORTINET</span>
+                        <span class="text-3xl font-bold text-slate-400 partner-logo">Synology</span>
+                        <span class="text-3xl font-black text-slate-400 tracking-widest partner-logo">DELL</span>
+                        <span class="text-3xl font-bold text-slate-400 partner-logo">vmware</span>
+                        <span class="text-3xl font-bold text-slate-400 partner-logo">RUCKUS</span>
+                        <span class="text-3xl font-black text-slate-400 tracking-widest partner-logo">HPE</span>
+                        <span class="text-3xl font-bold text-slate-400 partner-logo text-center leading-none">SUPER<br/><span class="text-xl">MICRO</span></span>
+                    </div>
+                </div>
+            </section>
+        </article>
+
+        <!-- ==================== 企業簡介 (About) ==================== -->
+        <article id="page-about" class="page-content">
+            <section class="py-20 lg:py-28 bg-primary relative overflow-hidden">
+                <div class="absolute inset-0 opacity-10 bg-[url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center"></div>
+                <div class="max-w-7xl mx-auto px-4 text-center relative z-10">
+                    <h1 class="text-4xl md:text-5xl font-extrabold text-white mb-6 tracking-tight">企業簡介</h1>
+                    <p class="text-xl md:text-2xl text-accent font-light">深厚的實務底蘊，您企業數位轉型最堅實的後盾</p>
+                </div>
+            </section>
+            
+            <section class="py-24 bg-white">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-24">
+                        <div>
+                            <span class="text-secondary font-bold tracking-widest text-sm mb-3 block uppercase">Our Expertise</span>
+                            <h2 class="text-3xl md:text-4xl font-bold text-dark mb-6 leading-tight">實務經驗淬鍊，<br/>專注解決最複雜的網路難題</h2>
+                            <p class="text-lg text-slate-600 leading-relaxed mb-6">
+                                金坊科技股份有限公司專注於「網路架構與系統整合領域」。我們深知在 AI 運算與數位轉型加速的今日，一個穩定、具備擴充性且高度安全的資訊基礎設施，是決定企業持續成長的命脈。
+                            </p>
+                            <p class="text-lg text-slate-600 leading-relaxed">
+                                我們的服務範疇涵蓋大型機房建置、異質系統優化整合，並向外延伸至次世代的智慧空間方案。從缺乏專職 IT 的中小企業，到具備跨國據點佈局的大型企業，金坊科技的技術顧問團隊皆具備完整的規劃與導入經驗，確保您的每一分技術投資，都能轉化為實際的營運優勢。
+                            </p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-6">
+                            <div class="bg-light p-8 rounded-2xl border border-slate-100 text-center hover:shadow-lg hover:border-secondary/30 transition-all duration-300">
+                                <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm"><i data-lucide="server" class="w-7 h-7 text-secondary"></i></div>
+                                <h4 class="font-bold text-dark text-lg mb-2">系統整合</h4>
+                                <p class="text-sm text-slate-500">異質平台串接與效能最佳化</p>
+                            </div>
+                            <div class="bg-light p-8 rounded-2xl border border-slate-100 text-center hover:shadow-lg hover:border-secondary/30 transition-all duration-300 mt-8">
+                                <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm"><i data-lucide="shield-check" class="w-7 h-7 text-secondary"></i></div>
+                                <h4 class="font-bold text-dark text-lg mb-2">資訊安全</h4>
+                                <p class="text-sm text-slate-500">企業級防禦與弱點阻絕</p>
+                            </div>
+                            <div class="bg-light p-8 rounded-2xl border border-slate-100 text-center hover:shadow-lg hover:border-secondary/30 transition-all duration-300 -mt-8">
+                                <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm"><i data-lucide="home" class="w-7 h-7 text-secondary"></i></div>
+                                <h4 class="font-bold text-dark text-lg mb-2">智慧空間</h4>
+                                <p class="text-sm text-slate-500">商辦與豪宅自動化網路</p>
+                            </div>
+                            <div class="bg-light p-8 rounded-2xl border border-slate-100 text-center hover:shadow-lg hover:border-secondary/30 transition-all duration-300">
+                                <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm"><i data-lucide="headset" class="w-7 h-7 text-secondary"></i></div>
+                                <h4 class="font-bold text-dark text-lg mb-2">專業維運</h4>
+                                <p class="text-sm text-slate-500">7x24 小時的技術後盾</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-slate-200 pt-24">
+                        <div class="text-center mb-16">
+                            <span class="text-secondary font-bold tracking-widest text-sm mb-3 block uppercase">Core Values</span>
+                            <h3 class="text-3xl md:text-4xl font-extrabold text-dark">企業核心價值</h3>
+                            <p class="mt-4 text-slate-500 max-w-2xl mx-auto">不只是供應商，更是您值得信賴的戰略技術夥伴。</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="bg-dark rounded-3xl p-10 relative overflow-hidden group hover:-translate-y-2 transition-transform duration-500 shadow-xl border border-slate-800">
+                                <div class="absolute -right-6 -bottom-6 opacity-5 group-hover:opacity-10 transition-opacity duration-500 group-hover:scale-110 transform"><i data-lucide="telescope" class="w-64 h-64 text-white"></i></div>
+                                <div class="relative z-10">
+                                    <div class="w-14 h-14 bg-primary border border-slate-700 text-accent rounded-xl flex items-center justify-center mb-6 shadow-glow"><i data-lucide="lightbulb" class="w-7 h-7"></i></div>
+                                    <h4 class="text-2xl font-bold text-white mb-4">前瞻視野與卓越技術</h4>
+                                    <p class="text-slate-400 leading-relaxed">科技日新月異，我們持續精進前瞻技術與原廠最高級別認證。從邊緣運算到 AI 數據中心，為企業打造具備未來五年以上擴充性的穩健資訊基石。</p>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-dark rounded-3xl p-10 relative overflow-hidden group hover:-translate-y-2 transition-transform duration-500 shadow-xl border border-slate-800">
+                                <div class="absolute -right-6 -bottom-6 opacity-5 group-hover:opacity-10 transition-opacity duration-500 group-hover:scale-110 transform"><i data-lucide="shield-check" class="w-64 h-64 text-white"></i></div>
+                                <div class="relative z-10">
+                                    <div class="w-14 h-14 bg-primary border border-slate-700 text-accent rounded-xl flex items-center justify-center mb-6 shadow-glow"><i data-lucide="lock" class="w-7 h-7"></i></div>
+                                    <h4 class="text-2xl font-bold text-white mb-4">零信任安全架構</h4>
+                                    <p class="text-slate-400 leading-relaxed">秉持「永不信任，始終驗證」的核心原則。我們拒絕形式化的安全，而是將頂級的資安防禦機制深植於網路規劃的每一個專案環節，防患於未然。</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-dark rounded-3xl p-10 relative overflow-hidden group hover:-translate-y-2 transition-transform duration-500 shadow-xl border border-slate-800">
+                                <div class="absolute -right-6 -bottom-6 opacity-5 group-hover:opacity-10 transition-opacity duration-500 group-hover:scale-110 transform"><i data-lucide="ruler" class="w-64 h-64 text-white"></i></div>
+                                <div class="relative z-10">
+                                    <div class="w-14 h-14 bg-primary border border-slate-700 text-accent rounded-xl flex items-center justify-center mb-6 shadow-glow"><i data-lucide="crosshair" class="w-7 h-7"></i></div>
+                                    <h4 class="text-2xl font-bold text-white mb-4">精準適配的客製策略</h4>
+                                    <p class="text-slate-400 leading-relaxed">摒棄傳統硬塞套裝產品的作法。我們的系統規劃師深入解構企業營運痛點與預算框架，量身裁剪出最具商業效益與成本控管的數位轉型藍圖。</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-dark rounded-3xl p-10 relative overflow-hidden group hover:-translate-y-2 transition-transform duration-500 shadow-xl border border-slate-800">
+                                <div class="absolute -right-6 -bottom-6 opacity-5 group-hover:opacity-10 transition-opacity duration-500 group-hover:scale-110 transform"><i data-lucide="activity" class="w-64 h-64 text-white"></i></div>
+                                <div class="relative z-10">
+                                    <div class="w-14 h-14 bg-primary border border-slate-700 text-accent rounded-xl flex items-center justify-center mb-6 shadow-glow"><i data-lucide="clock" class="w-7 h-7"></i></div>
+                                    <h4 class="text-2xl font-bold text-white mb-4">全天候的永續維運</h4>
+                                    <p class="text-slate-400 leading-relaxed">專案交付只是服務的起點。我們建構主動式監控機制，提供完善的 SLA 與 7x24 不間斷的技術後盾，確保企業營運的永續流暢與高可用性。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </article>
+
+        <!-- ==================== 專業服務 (Services) ==================== -->
+        <article id="page-services" class="page-content">
+            <section class="py-20 lg:py-28 bg-primary">
+                <div class="max-w-7xl mx-auto px-4 text-center">
+                    <h1 class="text-4xl md:text-5xl font-extrabold text-white mb-6 tracking-tight">全方位專業服務</h1>
+                    <p class="text-xl text-accent font-light">從底層網路佈線到高階 AI 數據中心，滿足企業各階段 IT 需求</p>
+                </div>
+            </section>
+
+            <section class="py-24 bg-light">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    
+                    <div class="mb-24">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            <div class="bg-white p-10 rounded-2xl shadow-lg border border-slate-100 hover:shadow-xl transition-shadow h-full-card">
+                                <div class="w-16 h-16 bg-blue-50 text-secondary rounded-xl flex items-center justify-center mb-8">
+                                    <i data-lucide="wifi" class="w-8 h-8"></i>
+                                </div>
+                                <h3 class="text-2xl font-bold text-dark mb-4">網路系統建置優化</h3>
+                                <p class="text-slate-500 leading-relaxed mb-6 flex-grow-content">
+                                    還在為網路速率緩慢，開會卡頓導致員工或客戶抱怨頻頻嗎？讓我們透過封包分析與架構重整，幫您找到根本原因並解決！
+                                </p>
+                                <ul class="text-sm text-slate-600 space-y-3 font-medium mt-auto">
+                                    <li class="flex items-start"><i data-lucide="check-circle-2" class="w-5 h-5 text-accent mr-2 flex-shrink-0"></i> 企業級 Wi-Fi 6/7 無縫漫遊建置</li>
+                                    <li class="flex items-start"><i data-lucide="check-circle-2" class="w-5 h-5 text-accent mr-2 flex-shrink-0"></i> 跨據點 SD-WAN 與 VPN 規劃</li>
+                                    <li class="flex items-start"><i data-lucide="check-circle-2" class="w-5 h-5 text-accent mr-2 flex-shrink-0"></i> 頻寬管理與網路效能調校</li>
+                                </ul>
+                            </div>
+                            <div class="bg-white p-10 rounded-2xl shadow-lg border border-slate-100 hover:shadow-xl transition-shadow h-full-card">
+                                <div class="w-16 h-16 bg-blue-50 text-secondary rounded-xl flex items-center justify-center mb-8">
+                                    <i data-lucide="server" class="w-8 h-8"></i>
+                                </div>
+                                <h3 class="text-2xl font-bold text-dark mb-4">監控 & 弱電系統建置</h3>
+                                <p class="text-slate-500 leading-relaxed mb-6 flex-grow-content">
+                                    從 0 開始建機房。資訊系統機房規劃、網路系統化佈線工程、監控管理系統、UPS 不斷電系統建置。
+                                </p>
+                                <ul class="text-sm text-slate-600 space-y-3 font-medium mt-auto">
+                                    <li class="flex items-start"><i data-lucide="check-circle-2" class="w-5 h-5 text-accent mr-2 flex-shrink-0"></i> 伺服器機櫃與標準化理線工程</li>
+                                    <li class="flex items-start"><i data-lucide="check-circle-2" class="w-5 h-5 text-accent mr-2 flex-shrink-0"></i> 企業級 IP 攝影機與門禁整合</li>
+                                    <li class="flex items-start"><i data-lucide="check-circle-2" class="w-5 h-5 text-accent mr-2 flex-shrink-0"></i> 機房溫濕度環境監控與電力備援</li>
+                                </ul>
+                            </div>
+                            <div class="bg-white p-10 rounded-2xl shadow-lg border border-slate-100 hover:shadow-xl transition-shadow h-full-card">
+                                <div class="w-16 h-16 bg-blue-50 text-secondary rounded-xl flex items-center justify-center mb-8">
+                                    <i data-lucide="users-2" class="w-8 h-8"></i>
+                                </div>
+                                <h3 class="text-2xl font-bold text-dark mb-4">中小企業資訊外包</h3>
+                                <p class="text-slate-500 leading-relaxed mb-6 flex-grow-content">
+                                    凌亂線路、緩慢速度、昂貴維運費用... 讓我們為您節省年度 IT 開支，提供定期維護與即時顧問。
+                                </p>
+                                <ul class="text-sm text-slate-600 space-y-3 font-medium mt-auto">
+                                    <li class="flex items-start"><i data-lucide="check-circle-2" class="w-5 h-5 text-accent mr-2 flex-shrink-0"></i> 電腦設備採購與生命週期管理</li>
+                                    <li class="flex items-start"><i data-lucide="check-circle-2" class="w-5 h-5 text-accent mr-2 flex-shrink-0"></i> 定期到場檢修與遠端即時排除</li>
+                                    <li class="flex items-start"><i data-lucide="check-circle-2" class="w-5 h-5 text-accent mr-2 flex-shrink-0"></i> 微軟 M365/Google 雲端導入</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h2 class="text-3xl md:text-4xl font-extrabold text-dark text-center mb-4">企業級進階解決方案</h2>
+                    <p class="text-slate-500 text-center text-lg mb-12 max-w-3xl mx-auto">將複雜的 IT 架構轉化為推動營運的助力，我們提供四大領域的深度技術建置。</p>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="bg-white rounded-3xl p-8 lg:p-10 shadow-lg border border-slate-100 hover:shadow-2xl transition-all duration-300">
+                            <div class="flex items-center mb-8 border-b border-slate-100 pb-6">
+                                <div class="p-3 bg-indigo-50 rounded-xl text-indigo-600 mr-4 shadow-sm"><i data-lucide="network" class="w-8 h-8"></i></div>
+                                <h3 class="text-2xl font-bold text-dark">企業網路與系統整合</h3>
+                            </div>
+                            <ul class="space-y-5 text-slate-600">
+                                <li class="flex items-start">
+                                    <i data-lucide="shield-check" class="w-5 h-5 text-secondary mt-1 mr-3 flex-shrink-0"></i>
+                                    <div><strong class="text-dark text-base block">資安防火牆 (Firewall) 部署</strong> <span class="text-sm text-slate-500 mt-1 block">阻絕未經授權的存取，建立企業內部網路的第一道堅實防線。</span></div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i data-lucide="activity" class="w-5 h-5 text-secondary mt-1 mr-3 flex-shrink-0"></i>
+                                    <div><strong class="text-dark text-base block">負載平衡 (Load Balancer)</strong> <span class="text-sm text-slate-500 mt-1 block">智慧分配網路流量，確保公司核心服務與網站高可用性、不中斷。</span></div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i data-lucide="lock" class="w-5 h-5 text-secondary mt-1 mr-3 flex-shrink-0"></i>
+                                    <div><strong class="text-dark text-base block">SSL VPN 安全遠端存取</strong> <span class="text-sm text-slate-500 mt-1 block">提供企業級的加密連線，保障遠端與居家辦公的資料傳輸安全。</span></div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i data-lucide="monitor" class="w-5 h-5 text-secondary mt-1 mr-3 flex-shrink-0"></i>
+                                    <div><strong class="text-dark text-base block">網路管理與監控 (NMS)</strong> <span class="text-sm text-slate-500 mt-1 block">全天候圖形化監測告警系統，協助 IT 人員秒速定位網路瓶頸。</span></div>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-white rounded-3xl p-8 lg:p-10 shadow-lg border border-slate-100 hover:shadow-2xl transition-all duration-300">
+                            <div class="flex items-center mb-8 border-b border-slate-100 pb-6">
+                                <div class="p-3 bg-red-50 rounded-xl text-red-600 mr-4 shadow-sm"><i data-lucide="shield-alert" class="w-8 h-8"></i></div>
+                                <h3 class="text-2xl font-bold text-dark">全方位資安防護與檢測</h3>
+                            </div>
+                            <ul class="space-y-5 text-slate-600">
+                                <li class="flex items-start">
+                                    <i data-lucide="crosshair" class="w-5 h-5 text-secondary mt-1 mr-3 flex-shrink-0"></i>
+                                    <div><strong class="text-dark text-base block">入侵防禦 (IPS) & 應用層防火牆 (WAF)</strong> <span class="text-sm text-slate-500 mt-1 block">主動攔截惡意流量，並專屬保護網站應用程式防範 SQL 注入攻擊。</span></div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i data-lucide="shield" class="w-5 h-5 text-secondary mt-1 mr-3 flex-shrink-0"></i>
+                                    <div><strong class="text-dark text-base block">端點防護 (EDR) & 進階威脅防護 (APT)</strong> <span class="text-sm text-slate-500 mt-1 block">監控終端設備，深度分析並防堵勒索軟體與針對性的持續攻擊。</span></div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i data-lucide="search" class="w-5 h-5 text-secondary mt-1 mr-3 flex-shrink-0"></i>
+                                    <div><strong class="text-dark text-base block">資安弱點掃描 & 原始碼檢測</strong> <span class="text-sm text-slate-500 mt-1 block">定期體檢系統與應用程式漏洞，提供專業的合規與修補建議。</span></div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i data-lucide="mail-warning" class="w-5 h-5 text-secondary mt-1 mr-3 flex-shrink-0"></i>
+                                    <div><strong class="text-dark text-base block">郵件防護與反垃圾郵件 (SPAM)</strong> <span class="text-sm text-slate-500 mt-1 block">精準阻擋釣魚信件與惡意附件，淨化企業通訊環境免於詐騙。</span></div>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-white rounded-3xl p-8 lg:p-10 shadow-lg border border-slate-100 hover:shadow-2xl transition-all duration-300">
+                            <div class="flex items-center mb-8 border-b border-slate-100 pb-6">
+                                <div class="p-3 bg-slate-800 rounded-xl text-white mr-4 shadow-sm"><i data-lucide="server" class="w-8 h-8"></i></div>
+                                <h3 class="text-2xl font-bold text-dark">基礎架構建置與優化</h3>
+                            </div>
+                            <ul class="space-y-5 text-slate-600">
+                                <li class="flex items-start">
+                                    <i data-lucide="hard-drive" class="w-5 h-5 text-secondary mt-1 mr-3 flex-shrink-0"></i>
+                                    <div><strong class="text-dark text-base block">工作站 & 伺服器設備規劃</strong> <span class="text-sm text-slate-500 mt-1 block">依據企業營運需求，量身配置最具性價比與擴充性的硬體設備。</span></div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i data-lucide="layers" class="w-5 h-5 text-secondary mt-1 mr-3 flex-shrink-0"></i>
+                                    <div><strong class="text-dark text-base block">虛擬化與超融合 (HCI) 架構</strong> <span class="text-sm text-slate-500 mt-1 block">整合運算與儲存資源，大幅提升 IT 資源調度彈性與管理效率。</span></div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i data-lucide="database-backup" class="w-5 h-5 text-secondary mt-1 mr-3 flex-shrink-0"></i>
+                                    <div><strong class="text-dark text-base block">異地備援與災難復原 (DR)</strong> <span class="text-sm text-slate-500 mt-1 block">建立完善的資料備份與保全機制，確保遇災時能最快恢復營運。</span></div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i data-lucide="cable" class="w-5 h-5 text-secondary mt-1 mr-3 flex-shrink-0"></i>
+                                    <div><strong class="text-dark text-base block">企業資料中心與弱電工程</strong> <span class="text-sm text-slate-500 mt-1 block">從 UPS 不斷電系統到標準化網路佈線，鞏固機房物理環境安全。</span></div>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-white rounded-3xl p-8 lg:p-10 shadow-lg border border-slate-100 hover:shadow-2xl transition-all duration-300">
+                            <div class="flex items-center mb-8 border-b border-slate-100 pb-6">
+                                <div class="p-3 bg-amber-50 rounded-xl text-amber-600 mr-4 shadow-sm"><i data-lucide="cpu" class="w-8 h-8"></i></div>
+                                <h3 class="text-2xl font-bold text-dark">AI 與智慧整合方案</h3>
+                            </div>
+                            <ul class="space-y-5 text-slate-600">
+                                <li class="flex items-start">
+                                    <i data-lucide="bot" class="w-5 h-5 text-secondary mt-1 mr-3 flex-shrink-0"></i>
+                                    <div><strong class="text-dark text-base block">AI 數據中心與 GPU 伺服器</strong> <span class="text-sm text-slate-500 mt-1 block">佈署專屬的高算力環境，加速企業內部 AI 模型的訓練與應用開發。</span></div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i data-lucide="workflow" class="w-5 h-5 text-secondary mt-1 mr-3 flex-shrink-0"></i>
+                                    <div><strong class="text-dark text-base block">AI 應用與自動化導入評估</strong> <span class="text-sm text-slate-500 mt-1 block">協助企業梳理痛點，規劃最適切的 AI 轉型與業務流程自動化路徑。</span></div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i data-lucide="settings" class="w-5 h-5 text-secondary mt-1 mr-3 flex-shrink-0"></i>
+                                    <div><strong class="text-dark text-base block">客製化系統與流程優化</strong> <span class="text-sm text-slate-500 mt-1 block">依據特定產業的特殊需求，開發專屬系統以提升整體營運效率。</span></div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i data-lucide="home" class="w-5 h-5 text-secondary mt-1 mr-3 flex-shrink-0"></i>
+                                    <div><strong class="text-dark text-base block">智慧家庭與智慧辦公整合</strong> <span class="text-sm text-slate-500 mt-1 block">結合 IoT 物聯網技術，打造節能、便利且具未來感的生活與工作空間。</span></div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </article>
+
+        <!-- ==================== 硬體設備 (Hardware) 【新增專頁】 ==================== -->
+        <article id="page-hardware" class="page-content">
+            <section class="py-20 lg:py-28 bg-primary relative overflow-hidden">
+                <div class="absolute inset-0 opacity-20 bg-[url('https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center"></div>
+                <div class="max-w-7xl mx-auto px-4 text-center relative z-10">
+                    <h1 class="text-4xl md:text-5xl font-extrabold text-white mb-6 tracking-tight">硬體設備與採購</h1>
+                    <p class="text-xl text-accent font-light">嚴選全球頂尖 IT 品牌，為您構築堅實的硬體基石</p>
+                </div>
+            </section>
+
+            <section class="py-24 bg-light">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="text-center mb-16">
+                        <h2 class="text-3xl md:text-4xl font-extrabold text-dark mb-6">不只是銷售，我們提供專屬架構建議</h2>
+                        <p class="text-lg text-slate-600 max-w-3xl mx-auto">
+                            金坊科技不僅提供專業系統整合服務，更與國際頂尖原廠深度合作。無論是商用筆電、企業級網路設備、伺服器或資安防火牆，我們皆能為您提供極具競爭力的報價與完善的售後保固。
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-12">
+                        
+                        <!-- 類別 1: 網路設備 -->
+                        <div class="bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-100 group hover:shadow-2xl transition-all duration-300">
+                            <div class="h-64 overflow-hidden relative">
+                                <img src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="網路設備" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                <div class="absolute inset-0 bg-gradient-to-t from-dark/80 to-transparent"></div>
+                                <h3 class="absolute bottom-6 left-6 text-2xl font-bold text-white flex items-center">
+                                    <i data-lucide="network" class="w-6 h-6 mr-3 text-accent"></i> 企業網路通訊設備
+                                </h3>
+                            </div>
+                            <div class="p-8">
+                                <p class="text-slate-600 mb-6 line-clamp-3">從核心交換器 (Core Switch)、邊緣路由器到最新規格的 Wi-Fi 6/7 無線基地台 (AP)，提供高速且穩定的企業網路基礎骨幹。</p>
+                                <div class="mb-6">
+                                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-3">推薦合作品牌</span>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-md text-sm font-medium">Cisco</span>
+                                        <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-md text-sm font-medium">Ruckus</span>
+                                        <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-md text-sm font-medium">Aruba</span>
+                                        <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-md text-sm font-medium">D-Link</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 類別 2: 資安設備 -->
+                        <div class="bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-100 group hover:shadow-2xl transition-all duration-300">
+                            <div class="h-64 overflow-hidden relative">
+                                <img src="https://images.unsplash.com/photo-1563206767-5b18f218e8de?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="資安設備" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                <div class="absolute inset-0 bg-gradient-to-t from-dark/80 to-transparent"></div>
+                                <h3 class="absolute bottom-6 left-6 text-2xl font-bold text-white flex items-center">
+                                    <i data-lucide="shield-alert" class="w-6 h-6 mr-3 text-red-400"></i> 資訊安全與防火牆
+                                </h3>
+                            </div>
+                            <div class="p-8">
+                                <p class="text-slate-600 mb-6 line-clamp-3">嚴密防護企業邊界。提供次世代防火牆 (NGFW)、整合式威脅管理 (UTM) 與進階端點防護軟硬體設備，杜絕勒索病毒與駭客攻擊。</p>
+                                <div class="mb-6">
+                                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-3">推薦合作品牌</span>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-md text-sm font-medium">Fortinet</span>
+                                        <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-md text-sm font-medium">Palo Alto</span>
+                                        <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-md text-sm font-medium">Trend Micro</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 類別 3: 伺服器與儲存 -->
+                        <div class="bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-100 group hover:shadow-2xl transition-all duration-300">
+                            <div class="h-64 overflow-hidden relative">
+                                <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="伺服器儲存" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                <div class="absolute inset-0 bg-gradient-to-t from-dark/80 to-transparent"></div>
+                                <h3 class="absolute bottom-6 left-6 text-2xl font-bold text-white flex items-center">
+                                    <i data-lucide="server" class="w-6 h-6 mr-3 text-secondary"></i> 伺服器與資料儲存
+                                </h3>
+                            </div>
+                            <div class="p-8">
+                                <p class="text-slate-600 mb-6 line-clamp-3">從塔式伺服器 (Tower/Rack)、AI GPU 高效運算主機，到企業級網路儲存設備 (NAS/SAN)，為龐大的數據資產打造穩健的資料中心。</p>
+                                <div class="mb-6">
+                                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-3">推薦合作品牌</span>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-md text-sm font-medium">Dell EMC</span>
+                                        <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-md text-sm font-medium">HPE</span>
+                                        <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-md text-sm font-medium">Synology</span>
+                                        <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-md text-sm font-medium">Supermicro</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 類別 4: 商用終端設備 -->
+                        <div class="bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-100 group hover:shadow-2xl transition-all duration-300">
+                            <div class="h-64 overflow-hidden relative">
+                                <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="商用終端" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                <div class="absolute inset-0 bg-gradient-to-t from-dark/80 to-transparent"></div>
+                                <h3 class="absolute bottom-6 left-6 text-2xl font-bold text-white flex items-center">
+                                    <i data-lucide="laptop" class="w-6 h-6 mr-3 text-emerald-400"></i> 商用終端與辦公設備
+                                </h3>
+                            </div>
+                            <div class="p-8">
+                                <p class="text-slate-600 mb-6 line-clamp-3">提供企業員工高效的工作利器。包含高階商務筆記型電腦、桌上型工作站，以及確保電力供應的 UPS 不斷電系統與周邊零組件。</p>
+                                <div class="mb-6">
+                                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-3">推薦合作品牌</span>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-md text-sm font-medium">Lenovo</span>
+                                        <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-md text-sm font-medium">ASUS</span>
+                                        <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-md text-sm font-medium">APC (UPS)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- 採購引導 CTA -->
+                    <div class="mt-20 bg-dark rounded-[2.5rem] p-10 lg:p-16 text-center relative overflow-hidden shadow-2xl border border-slate-800">
+                        <div class="absolute -right-20 -top-20 w-96 h-96 bg-secondary/20 rounded-full blur-3xl pointer-events-none"></div>
+                        <div class="absolute -left-20 -bottom-20 w-96 h-96 bg-accent/10 rounded-full blur-3xl pointer-events-none"></div>
+                        
+                        <div class="relative z-10">
+                            <h3 class="text-3xl md:text-4xl font-extrabold text-white mb-6">準備好為企業進行硬體升級了嗎？</h3>
+                            <p class="text-lg text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed">
+                                我們不經營線上購物車，因為我們深信「最適切的硬體需要最專業的架構規劃」。告訴我們您的採購需求，讓技術顧問為您提供最精準的硬體報價與整合方案。
+                            </p>
+                            <a href="#contact" class="inline-flex items-center justify-center btn-premium-glow bg-secondary text-white px-10 py-5 rounded-xl text-xl font-bold shadow-glow hover:shadow-glow-lg transition-all duration-300">
+                                聯絡我們取得報價 <i data-lucide="arrow-right" class="w-6 h-6 ml-3"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </article>
+
+        <!-- ==================== 智慧空間 (Smart Home) ==================== -->
+        <article id="page-smart-home" class="page-content">
+            <section class="py-20 lg:py-28 bg-primary relative overflow-hidden">
+                <div class="absolute inset-0 opacity-10 bg-[url('https://images.unsplash.com/photo-1558002038-1055907df827?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center"></div>
+                <div class="max-w-7xl mx-auto px-4 text-center relative z-10">
+                    <h1 class="text-4xl md:text-5xl font-extrabold text-white mb-6 tracking-tight">智慧空間與家電整合</h1>
+                    <p class="text-xl text-accent font-light">打造穩定無死角的頂級智慧生活場景</p>
+                </div>
+            </section>
+
+            <section class="py-24 bg-white">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <!-- 核心痛點與規劃師 -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-24">
+                        <div>
+                            <span class="text-secondary font-bold tracking-widest text-sm mb-3 block uppercase">Smart Home Planning</span>
+                            <h2 class="text-3xl md:text-4xl font-bold text-dark mb-6 leading-tight">穩定網路是智慧家庭的心臟，<br/>您家的連線準備好了嗎？</h2>
+                            <p class="text-lg text-slate-600 leading-relaxed mb-8">
+                                隨著智慧聯網家電（IoT）、4K 影音串流與遠端工作需求大增，高速且穩定優化的全屋網路覆蓋率，已是現代頂級住宅的最基礎建設。
+                            </p>
+                            
+                            <div class="bg-slate-50 p-8 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden group hover:border-secondary/30 transition-colors">
+                                <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><i data-lucide="help-circle" class="w-24 h-24 text-secondary"></i></div>
+                                <h4 class="text-xl font-bold text-dark mb-4 flex items-center relative z-10"><i data-lucide="user-check" class="w-6 h-6 mr-3 text-secondary"></i>為何需要「專屬網路規劃師」？</h4>
+                                <p class="text-slate-600 relative z-10 leading-relaxed">
+                                    傳統網路設置通常統包於水電工程。有別於一般水電，金坊科技的網路規劃師會依照家庭成員的使用習慣量身規劃，包含<strong>前期裝潢配置、方案選擇、點位規劃、安裝數量和位置</strong>一手包辦。徹底解決完工後才發覺須拉明線破壞美觀，或家電因連線不穩而斷線的問題。
+                                </p>
+                            </div>
+                        </div>
+                        <div class="relative">
+                            <div class="absolute inset-0 bg-gradient-to-tr from-secondary/20 to-transparent rounded-3xl transform translate-x-4 translate-y-4"></div>
+                            <img src="https://images.unsplash.com/photo-1558002038-1055907df827?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="智慧家庭與遠端工作" class="rounded-3xl shadow-xl w-full h-auto object-cover relative z-10">
+                        </div>
+                    </div>
+
+                    <!-- 痛點解決 -->
+                    <div class="mb-24">
+                        <div class="text-center mb-12">
+                            <h3 class="text-3xl font-extrabold text-dark">網路規劃師為您解決的常見痛點</h3>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <div class="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                                <div class="w-12 h-12 bg-red-50 text-red-500 rounded-xl flex items-center justify-center mb-6"><i data-lucide="wifi-off" class="w-6 h-6"></i></div>
+                                <h4 class="font-bold text-dark text-lg mb-2">訊號死角問題</h4>
+                                <p class="text-slate-500 text-sm leading-relaxed">解決大坪數或多樓層中，特定房間訊號極差或頻繁斷線的困擾。</p>
+                            </div>
+                            <div class="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                                <div class="w-12 h-12 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center mb-6"><i data-lucide="cable" class="w-6 h-6"></i></div>
+                                <h4 class="font-bold text-dark text-lg mb-2">電線外露不美觀</h4>
+                                <p class="text-slate-500 text-sm leading-relaxed">避免未經規劃的壓條與明線，破壞精心設計的室內百萬裝潢。</p>
+                            </div>
+                            <div class="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                                <div class="w-12 h-12 bg-blue-50 text-secondary rounded-xl flex items-center justify-center mb-6"><i data-lucide="help-circle" class="w-6 h-6"></i></div>
+                                <h4 class="font-bold text-dark text-lg mb-2">設備選擇困難</h4>
+                                <p class="text-slate-500 text-sm leading-relaxed">專業評估 Mesh 網狀網路或企業級 AP，不花冤枉錢買錯設備。</p>
+                            </div>
+                            <div class="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                                <div class="w-12 h-12 bg-green-50 text-green-500 rounded-xl flex items-center justify-center mb-6"><i data-lucide="layout-dashboard" class="w-6 h-6"></i></div>
+                                <h4 class="font-bold text-dark text-lg mb-2">點位佈置不佳</h4>
+                                <p class="text-slate-500 text-sm leading-relaxed">精準預留網路孔與電源點位，讓智慧家電與家具擺放完美契合。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 智慧家電整合應用場景 -->
+                    <div class="mb-24">
+                        <div class="text-center mb-16">
+                            <span class="text-secondary font-bold tracking-widest text-sm mb-3 block uppercase">Appliance Integration</span>
+                            <h3 class="text-3xl md:text-4xl font-extrabold text-dark">無縫串接各式智慧家電，打造專屬生活場景</h3>
+                            <p class="text-slate-500 mt-4 max-w-2xl mx-auto text-lg">我們以企業級穩固的網路架構為基礎，協助您整合市面上主流的智慧家電品牌，讓「自動化」真正融入日常。</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            <div class="bg-light rounded-3xl p-10 border border-slate-100 hover:shadow-xl transition-all duration-300">
+                                <div class="w-16 h-16 bg-white border border-slate-200 text-amber-500 rounded-2xl flex items-center justify-center mb-8 shadow-sm">
+                                    <i data-lucide="lightbulb" class="w-8 h-8"></i>
+                                </div>
+                                <h4 class="text-2xl font-bold text-dark mb-4">智慧照明與溫控</h4>
+                                <p class="text-slate-500 leading-relaxed mb-6">
+                                    整合智能開關與空調。下班快抵達家門前系統自動預冷；設定「電影模式」一鍵連動調整全室燈光亮度與窗簾。
+                                </p>
+                                <ul class="text-sm text-slate-600 space-y-3 font-medium">
+                                    <li class="flex items-center"><i data-lucide="check-circle-2" class="w-5 h-5 text-accent mr-3"></i> 智慧燈泡 / 燈條聯網控制</li>
+                                    <li class="flex items-center"><i data-lucide="check-circle-2" class="w-5 h-5 text-accent mr-3"></i> 溫濕度感測與空調自動連動</li>
+                                    <li class="flex items-center"><i data-lucide="check-circle-2" class="w-5 h-5 text-accent mr-3"></i> 電動窗簾智能排程開關</li>
+                                </ul>
+                            </div>
+                            <div class="bg-light rounded-3xl p-10 border border-slate-100 hover:shadow-xl transition-all duration-300">
+                                <div class="w-16 h-16 bg-white border border-slate-200 text-red-500 rounded-2xl flex items-center justify-center mb-8 shadow-sm">
+                                    <i data-lucide="shield-alert" class="w-8 h-8"></i>
+                                </div>
+                                <h4 class="text-2xl font-bold text-dark mb-4">居家安全與監控</h4>
+                                <p class="text-slate-500 leading-relaxed mb-6">
+                                    將高畫質 IP 攝影機、智慧電子鎖與網路結合，搭配私有雲 (NAS) 錄影備份，出門在外隨時掌握家中動態。
+                                </p>
+                                <ul class="text-sm text-slate-600 space-y-3 font-medium">
+                                    <li class="flex items-center"><i data-lucide="check-circle-2" class="w-5 h-5 text-accent mr-3"></i> 智慧電子鎖與遠端開門授權</li>
+                                    <li class="flex items-center"><i data-lucide="check-circle-2" class="w-5 h-5 text-accent mr-3"></i> 室內外安全監控攝影機連網</li>
+                                    <li class="flex items-center"><i data-lucide="check-circle-2" class="w-5 h-5 text-accent mr-3"></i> 煙霧檢測與漏水警報推播</li>
+                                </ul>
+                            </div>
+                            <div class="bg-light rounded-3xl p-10 border border-slate-100 hover:shadow-xl transition-all duration-300">
+                                <div class="w-16 h-16 bg-white border border-slate-200 text-purple-500 rounded-2xl flex items-center justify-center mb-8 shadow-sm">
+                                    <i data-lucide="mic" class="w-8 h-8"></i>
+                                </div>
+                                <h4 class="text-2xl font-bold text-dark mb-4">家庭娛樂與聲控</h4>
+                                <p class="text-slate-500 leading-relaxed mb-6">
+                                    協助整合 Apple HomeKit、Google Home 等語音助理，出一張嘴就能輕鬆控制掃地機器人、智慧電視與音響。
+                                </p>
+                                <ul class="text-sm text-slate-600 space-y-3 font-medium">
+                                    <li class="flex items-center"><i data-lucide="check-circle-2" class="w-5 h-5 text-accent mr-3"></i> 語音音箱與智慧管家設定</li>
+                                    <li class="flex items-center"><i data-lucide="check-circle-2" class="w-5 h-5 text-accent mr-3"></i> 掃地機器人/清淨機無縫串聯</li>
+                                    <li class="flex items-center"><i data-lucide="check-circle-2" class="w-5 h-5 text-accent mr-3"></i> NAS 家庭劇院影音串流中心</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 服務流程 -->
+                    <div class="bg-dark rounded-[2.5rem] p-12 lg:p-20 relative overflow-hidden shadow-2xl border border-slate-800">
+                        <div class="absolute -right-20 -top-20 opacity-5 pointer-events-none"><i data-lucide="home" class="w-[500px] h-[500px] text-white"></i></div>
+                        <div class="relative z-10">
+                            <h3 class="text-3xl md:text-4xl font-extrabold text-white mb-16 text-center">網路與家電建置標準流程</h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 text-center">
+                                <div class="relative">
+                                    <div class="hidden md:block absolute top-10 left-[60%] w-[80%] h-[2px] bg-gradient-to-r from-accent to-transparent opacity-30"></div>
+                                    <div class="w-20 h-20 bg-slate-800 border border-slate-700 rounded-2xl flex items-center justify-center mx-auto mb-6 text-accent shadow-glow"><i data-lucide="hammer" class="w-10 h-10"></i></div>
+                                    <h4 class="text-xl font-bold text-white mb-3">1. 裝潢架設監工</h4>
+                                    <p class="text-slate-400 text-sm leading-relaxed">與室內設計師深度討論，配合裝修建置最完美的有線與無線環境。</p>
+                                </div>
+                                <div class="relative">
+                                    <div class="hidden md:block absolute top-10 left-[60%] w-[80%] h-[2px] bg-gradient-to-r from-accent to-transparent opacity-30"></div>
+                                    <div class="w-20 h-20 bg-slate-800 border border-slate-700 rounded-2xl flex items-center justify-center mx-auto mb-6 text-accent shadow-glow"><i data-lucide="list-checks" class="w-10 h-10"></i></div>
+                                    <h4 class="text-xl font-bold text-white mb-3">2. 設備方案規劃</h4>
+                                    <p class="text-slate-400 text-sm leading-relaxed">精準針對居家環境格局及使用習慣，推薦並採購最適網路方案與設備。</p>
+                                </div>
+                                <div class="relative">
+                                    <div class="hidden md:block absolute top-10 left-[60%] w-[80%] h-[2px] bg-gradient-to-r from-accent to-transparent opacity-30"></div>
+                                    <div class="w-20 h-20 bg-slate-800 border border-slate-700 rounded-2xl flex items-center justify-center mx-auto mb-6 text-accent shadow-glow"><i data-lucide="cloud" class="w-10 h-10"></i></div>
+                                    <h4 class="text-xl font-bold text-white mb-3">3. 私有雲端建置</h4>
+                                    <p class="text-slate-400 text-sm leading-relaxed">建置高安全性 NAS 伺服器，供全體家庭成員共享相片備份與影音空間。</p>
+                                </div>
+                                <div class="relative">
+                                    <div class="w-20 h-20 bg-slate-800 border border-slate-700 rounded-2xl flex items-center justify-center mx-auto mb-6 text-accent shadow-glow"><i data-lucide="smartphone" class="w-10 h-10"></i></div>
+                                    <h4 class="text-xl font-bold text-white mb-3">4. 智慧教學應用</h4>
+                                    <p class="text-slate-400 text-sm leading-relaxed">無縫整合照明、影音與各類家電，並提供一對一實際操作教學服務。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </article>
+
+        <!-- ==================== 完工實績 (Cases) ==================== -->
+        <article id="page-cases" class="page-content">
+            <section class="py-20 lg:py-28 bg-primary relative overflow-hidden">
+                <div class="absolute inset-0 opacity-10 bg-[url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center"></div>
+                <div class="max-w-7xl mx-auto px-4 text-center relative z-10">
+                    <h1 class="text-4xl md:text-5xl font-extrabold text-white mb-6 tracking-tight">精選完工實績</h1>
+                    <p class="text-xl text-accent font-light">從企業機房到百坪豪宅，見證我們為客戶打造的穩固資訊根基</p>
+                </div>
+            </section>
+
+            <section class="py-24 bg-light">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div class="bg-white rounded-2xl overflow-hidden shadow-lg border border-slate-200 flex flex-col group hover:-translate-y-2 transition-transform duration-300">
+                            <div class="h-60 relative overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="新北百坪豪宅智慧化" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                <div class="absolute top-4 left-4 bg-secondary text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-md">智慧空間</div>
+                            </div>
+                            <div class="p-8 flex flex-col flex-grow">
+                                <h3 class="text-2xl font-bold text-dark mb-3">新北百坪豪宅全棟智慧化與 Mesh 網路建置</h3>
+                                <p class="text-slate-600 text-sm leading-relaxed flex-grow">
+                                    配合室內設計團隊於毛胚屋時期進場。規劃全棟無死角 Wi-Fi 6 漫遊網路，並成功串接 40+ 點位的智慧照明、電動窗簾與環繞音響，解決大坪數隔間造成的訊號衰減問題。
+                                </p>
+                                <div class="mt-6 pt-6 border-t border-slate-100">
+                                    <span class="text-sm font-bold text-primary flex items-center"><i data-lucide="check-circle" class="w-4 h-4 mr-2"></i>導入設備：Ruckus AP、NAS 儲存、感測器</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl overflow-hidden shadow-lg border border-slate-200 flex flex-col group hover:-translate-y-2 transition-transform duration-300">
+                            <div class="h-60 relative overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="企業機房與資安防護" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                <div class="absolute top-4 left-4 bg-primary text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-md">系統建置與資安</div>
+                            </div>
+                            <div class="p-8 flex flex-col flex-grow">
+                                <h3 class="text-2xl font-bold text-dark mb-3">內湖科技園區跨國企業機房整併與資安防護</h3>
+                                <p class="text-slate-600 text-sm leading-relaxed flex-grow">
+                                    協助客戶進行總部機房伺服器虛擬化整併（VMware），並重新規劃實體網路線路理線。同時佈署次世代防火牆與端點防護，全面提升防範勒索軟體的安全層級。
+                                </p>
+                                <div class="mt-6 pt-6 border-t border-slate-100">
+                                    <span class="text-sm font-bold text-primary flex items-center"><i data-lucide="check-circle" class="w-4 h-4 mr-2"></i>導入設備：Fortinet、Dell 伺服器、機櫃整線</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl overflow-hidden shadow-lg border border-slate-200 flex flex-col group hover:-translate-y-2 transition-transform duration-300">
+                            <div class="h-60 relative overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="連鎖餐飲網路優化" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                <div class="absolute top-4 left-4 bg-accent text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-md">網路架構</div>
+                            </div>
+                            <div class="p-8 flex flex-col flex-grow">
+                                <h3 class="text-2xl font-bold text-dark mb-3">知名連鎖餐飲品牌 POS 系統與總部 VPN 優化</h3>
+                                <p class="text-slate-600 text-sm leading-relaxed flex-grow">
+                                    解決門市端 POS 機連線至總部系統時常斷線的痛點。重新架構 SD-WAN 與建立安全穩定的 VPN 通道，並提供 7x24 小時的遠端網路監測與 IT 外包維運服務。
+                                </p>
+                                <div class="mt-6 pt-6 border-t border-slate-100">
+                                    <span class="text-sm font-bold text-primary flex items-center"><i data-lucide="check-circle" class="w-4 h-4 mr-2"></i>導入設備：Cisco 路由器、負載平衡、監控系統</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </article>
+
+        <!-- ==================== 資訊精選文 (Insights) - 垂直排版與更新日期 ==================== -->
+        <article id="page-insights" class="page-content">
+            <section class="py-20 lg:py-28 bg-primary relative overflow-hidden">
+                <div class="absolute inset-0 opacity-10 bg-[url('https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center"></div>
+                <div class="max-w-7xl mx-auto px-4 text-center relative z-10">
+                    <h1 class="text-4xl md:text-5xl font-extrabold text-white mb-6 tracking-tight">資訊精選文</h1>
+                    <p class="text-xl text-accent font-light">深度解析科技時事、產業趨勢與企業資安防護洞察</p>
+                </div>
+            </section>
+
+            <section class="py-24 bg-light">
+                <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <!-- 垂直排列 -->
+                    <div class="flex flex-col space-y-10">
+                        <!-- 文章 1 -->
+                        <a href="javascript:void(0)" class="group bg-white rounded-3xl shadow-md border border-slate-200 overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col md:flex-row cursor-pointer">
+                            <div class="md:w-2/5 h-64 md:h-auto bg-slate-100 overflow-hidden relative flex-shrink-0">
+                                <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="大南方新矽谷" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                                <span class="absolute top-4 left-4 z-20 text-white text-xs font-bold bg-primary px-4 py-1.5 rounded-full shadow-lg">產業時事</span>
+                            </div>
+                            <div class="p-8 md:p-10 md:w-3/5 flex flex-col justify-center">
+                                <div class="flex flex-wrap items-center justify-between text-sm text-slate-500 mb-4 gap-2">
+                                    <span class="flex items-center text-secondary font-medium"><i data-lucide="tag" class="w-4 h-4 mr-2"></i> 最新產業趨勢分析</span>
+                                    <span class="flex items-center font-mono bg-slate-100 px-3 py-1 rounded-md"><i data-lucide="clock" class="w-4 h-4 mr-2"></i> 更新日期：2026-04-15</span>
+                                </div>
+                                <h3 class="text-2xl md:text-3xl font-extrabold text-dark mb-4 group-hover:text-secondary transition-colors leading-snug">國科會公布「大南方新矽谷」計畫，沙崙成為AI與資安產業新核心</h3>
+                                <p class="text-slate-600 text-base leading-relaxed line-clamp-3 mb-8">
+                                    政府積極推動大南方計畫，預期帶動龐大的智慧基礎建設需求。面對 AI 浪潮，企業應如何提前佈局網路與運算架構？本篇精選文帶您洞察最新政策商機與系統轉型的關鍵要素。
+                                </p>
+                                <div class="text-secondary font-bold text-base flex items-center mt-auto transition-transform group-hover:translate-x-2">
+                                    閱讀深度解析 <i data-lucide="arrow-right" class="w-5 h-5 ml-2"></i>
+                                </div>
+                            </div>
+                        </a>
+
+                        <!-- 文章 2 -->
+                        <a href="javascript:void(0)" class="group bg-white rounded-3xl shadow-md border border-slate-200 overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col md:flex-row cursor-pointer">
+                            <div class="md:w-2/5 h-64 md:h-auto bg-slate-100 overflow-hidden relative flex-shrink-0">
+                                <img src="https://images.unsplash.com/photo-1563206767-5b18f218e8de?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="勒索軟體與資安" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                                <span class="absolute top-4 left-4 z-20 text-white text-xs font-bold bg-red-600 px-4 py-1.5 rounded-full shadow-lg">資安洞察</span>
+                            </div>
+                            <div class="p-8 md:p-10 md:w-3/5 flex flex-col justify-center">
+                                <div class="flex flex-wrap items-center justify-between text-sm text-slate-500 mb-4 gap-2">
+                                    <span class="flex items-center text-red-600 font-medium"><i data-lucide="tag" class="w-4 h-4 mr-2"></i> 資安威脅報告摘要</span>
+                                    <span class="flex items-center font-mono bg-slate-100 px-3 py-1 rounded-md"><i data-lucide="clock" class="w-4 h-4 mr-2"></i> 更新日期：2026-03-28</span>
+                                </div>
+                                <h3 class="text-2xl md:text-3xl font-extrabold text-dark mb-4 group-hover:text-red-600 transition-colors leading-snug">勒索軟體持續升溫、供應鏈與高風險漏洞成為駭客攻擊焦點</h3>
+                                <p class="text-slate-600 text-base leading-relaxed line-clamp-3 mb-8">
+                                    近期針對製造業與供應鏈的勒索攻擊頻傳，企業不可再忽視端點防護與備援機制。專家建議應立即審視 VPN 漏洞並導入零信任（Zero Trust）認證架構，以阻斷潛在危機。
+                                </p>
+                                <div class="text-red-600 font-bold text-base flex items-center mt-auto transition-transform group-hover:translate-x-2">
+                                    閱讀深度解析 <i data-lucide="arrow-right" class="w-5 h-5 ml-2"></i>
+                                </div>
+                            </div>
+                        </a>
+
+                        <!-- 文章 3 -->
+                        <a href="javascript:void(0)" class="group bg-white rounded-3xl shadow-md border border-slate-200 overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col md:flex-row cursor-pointer">
+                            <div class="md:w-2/5 h-64 md:h-auto bg-slate-100 overflow-hidden relative flex-shrink-0">
+                                <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="AI 與雲端服務" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                                <span class="absolute top-4 left-4 z-20 text-white text-xs font-bold bg-accent px-4 py-1.5 rounded-full shadow-lg">科技專欄</span>
+                            </div>
+                            <div class="p-8 md:p-10 md:w-3/5 flex flex-col justify-center">
+                                <div class="flex flex-wrap items-center justify-between text-sm text-slate-500 mb-4 gap-2">
+                                    <span class="flex items-center text-secondary font-medium"><i data-lucide="tag" class="w-4 h-4 mr-2"></i> 企業數位轉型指南</span>
+                                    <span class="flex items-center font-mono bg-slate-100 px-3 py-1 rounded-md"><i data-lucide="clock" class="w-4 h-4 mr-2"></i> 更新日期：2026-02-15</span>
+                                </div>
+                                <h3 class="text-2xl md:text-3xl font-extrabold text-dark mb-4 group-hover:text-secondary transition-colors leading-snug">AI 落地加速，雲端備援與邊界防護成企業 IT 投資核心關鍵</h3>
+                                <p class="text-slate-600 text-base leading-relaxed line-clamp-3 mb-8">
+                                    企業導入生成式 AI 已成顯學，然而背後龐大的算力需求與機敏資料上雲的安全疑慮，促使企業 IT 大幅增加私有雲架構與 WAF 應用層防護的預算比例。
+                                </p>
+                                <div class="text-secondary font-bold text-base flex items-center mt-auto transition-transform group-hover:translate-x-2">
+                                    閱讀深度解析 <i data-lucide="arrow-right" class="w-5 h-5 ml-2"></i>
+                                </div>
+                            </div>
+                        </a>
+
+                    </div>
+                </div>
+            </section>
+        </article>
+
+        <!-- ==================== 聯絡我們 (Contact) ==================== -->
+        <article id="page-contact" class="page-content">
+            <section class="py-20 lg:py-28 bg-primary relative overflow-hidden">
+                <div class="absolute inset-0 opacity-10 bg-[url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center mix-blend-overlay"></div>
+                <div class="max-w-7xl mx-auto px-4 text-center relative z-10">
+                    <h1 class="text-4xl md:text-5xl font-extrabold text-white mb-6 tracking-tight">聯絡技術顧問</h1>
+                    <p class="text-xl text-accent font-light">有任何企業 IT 採購或高階家庭網路需求？歡迎隨時與我們的專家聯繫</p>
+                </div>
+            </section>
+
+            <section class="py-24 bg-white">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 mb-20">
+                        <!-- 聯絡資訊 -->
+                        <div>
+                            <h2 class="text-3xl font-extrabold text-dark mb-8">企業通訊中心</h2>
+                            <div class="bg-light p-10 rounded-3xl border border-slate-100 space-y-8 mb-10 shadow-sm">
+                                <div class="flex items-start">
+                                    <div class="p-3 bg-white rounded-xl shadow-sm mr-5"><i data-lucide="building" class="w-6 h-6 text-secondary"></i></div>
+                                    <div>
+                                        <h4 class="font-bold text-lg text-dark mb-1">金坊科技股份有限公司</h4>
+                                        <p class="text-sm text-slate-500">金坊實業有限公司 (Golden Square LTD)</p>
+                                        <p class="text-sm text-slate-400 mt-1 font-mono">統編：5576-4043</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start">
+                                    <div class="p-3 bg-white rounded-xl shadow-sm mr-5"><i data-lucide="map-pin" class="w-6 h-6 text-secondary"></i></div>
+                                    <div>
+                                        <h4 class="font-bold text-lg text-dark mb-1">企業總部</h4>
+                                        <p class="text-slate-600">台北市中山區復興北路 48 號 10 樓</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start">
+                                    <div class="p-3 bg-white rounded-xl shadow-sm mr-5"><i data-lucide="phone" class="w-6 h-6 text-secondary"></i></div>
+                                    <div>
+                                        <h4 class="font-bold text-lg text-dark mb-1">聯絡電話</h4>
+                                        <p class="text-slate-600 text-lg">02-2430-3099</p>
+                                        <p class="text-slate-500">專案手機：0975-519-899</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start">
+                                    <div class="p-3 bg-white rounded-xl shadow-sm mr-5"><i data-lucide="mail" class="w-6 h-6 text-secondary"></i></div>
+                                    <div>
+                                        <h4 class="font-bold text-lg text-dark mb-1">電子信箱</h4>
+                                        <p class="text-slate-600">info@goldensquare.com.tw</p>
+                                        <p class="text-slate-500">info@intrahome.tw</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 表單區域 -->
+                        <div class="bg-white rounded-3xl p-10 lg:p-12 shadow-2xl border border-slate-100 relative">
+                            <div class="absolute -top-10 -right-10 w-32 h-32 bg-accent/20 rounded-full blur-3xl pointer-events-none"></div>
+                            
+                            <form id="contact-form" class="space-y-6 relative z-10">
+                                <h3 class="text-2xl font-extrabold text-dark mb-2">專案諮詢表單</h3>
+                                <p class="text-slate-500 text-sm mb-8 border-b border-slate-100 pb-6">填寫您的需求，我們的系統架構師將儘速回覆。</p>
+                                
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                    <div>
+                                        <label for="name" class="block text-sm font-bold text-slate-700 mb-2">您的姓名 <span class="text-red-500">*</span></label>
+                                        <input type="text" id="name" required class="w-full border-slate-200 rounded-lg shadow-sm focus:ring-2 focus:ring-secondary focus:border-secondary border p-3.5 bg-slate-50 transition-all outline-none hover:bg-white">
+                                    </div>
+                                    <div>
+                                        <label for="phone" class="block text-sm font-bold text-slate-700 mb-2">聯絡電話</label>
+                                        <input type="tel" id="phone" class="w-full border-slate-200 rounded-lg shadow-sm focus:ring-2 focus:ring-secondary focus:border-secondary border p-3.5 bg-slate-50 transition-all outline-none hover:bg-white">
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label for="email" class="block text-sm font-bold text-slate-700 mb-2">電子郵件 <span class="text-red-500">*</span></label>
+                                    <input type="email" id="email" required class="w-full border-slate-200 rounded-lg shadow-sm focus:ring-2 focus:ring-secondary focus:border-secondary border p-3.5 bg-slate-50 transition-all outline-none hover:bg-white">
+                                </div>
+                                
+                                <div>
+                                    <label for="subject" class="block text-sm font-bold text-slate-700 mb-2">需求類別</label>
+                                    <select id="subject" class="w-full border-slate-200 rounded-lg shadow-sm focus:ring-2 focus:ring-secondary focus:border-secondary border p-3.5 bg-slate-50 transition-all outline-none cursor-pointer hover:bg-white">
+                                        <option value="企業硬體採購">企業 IT 硬體設備採購報價</option>
+                                        <option value="企業系統整合">企業網路架構與系統整合</option>
+                                        <option value="資訊安全">資訊安全與防火牆部署</option>
+                                        <option value="中小企業外包">中小企業 IT 維運外包</option>
+                                        <option value="智慧家庭網路">頂級智慧空間與家電整合</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="message" class="block text-sm font-bold text-slate-700 mb-2">需求簡述</label>
+                                    <textarea id="message" rows="4" placeholder="請簡述您的專案現況、預期目標或是需要的設備品牌與數量..." class="w-full border-slate-200 rounded-lg shadow-sm focus:ring-2 focus:ring-secondary focus:border-secondary border p-3.5 bg-slate-50 transition-all outline-none hover:bg-white resize-none"></textarea>
+                                </div>
+                                
+                                <div class="pt-4">
+                                    <button type="submit" class="btn-premium-glow w-full flex justify-center items-center py-4 px-4 rounded-lg shadow-glow-lg text-lg font-bold text-white bg-secondary outline-none">
+                                        安全傳送 <i data-lucide="send" class="w-5 h-5 ml-2"></i>
+                                    </button>
+                                </div>
+                                
+                                <div id="success-msg" class="hidden mt-6 p-4 bg-green-50 text-green-700 rounded-lg border border-green-200 text-center font-bold">
+                                    <i data-lucide="check-circle" class="w-6 h-6 inline-block mr-2 align-middle"></i>
+                                    訊息傳送成功！技術顧問將於 24 小時內與您聯繫。
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </article>
+
+    </main>
+
+    <!-- ==================== 高質感頁尾 (Footer) ==================== -->
+    <footer class="bg-dark pt-16 pb-8 mt-auto border-t-[4px] border-secondary">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12 border-b border-slate-800 pb-12">
+                <div class="lg:col-span-2">
+                    <a href="#home" class="text-2xl font-black text-white tracking-wider flex items-center gap-2 mb-6">
+                        <div class="bg-secondary p-1.5 rounded-lg">
+                            <i data-lucide="shield-check" class="text-white w-6 h-6"></i>
+                        </div>
+                        金坊科技
+                    </a>
+                    <p class="text-slate-400 leading-relaxed max-w-sm mb-6">
+                        專注於企業級網路架構、頂尖資訊安全防護，與次世代智慧空間整合。為您建構最可靠的資訊核心。
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-secondary hover:text-white transition-all"><i data-lucide="linkedin" class="w-5 h-5"></i></a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-secondary hover:text-white transition-all"><i data-lucide="facebook" class="w-5 h-5"></i></a>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold mb-6 tracking-wider">解決方案</h4>
+                    <ul class="space-y-4 text-slate-400">
+                        <li><a href="#hardware" class="hover:text-accent transition-colors">企業硬體採購與建置</a></li>
+                        <li><a href="#services" class="hover:text-accent transition-colors">企業網路架構優化</a></li>
+                        <li><a href="#services" class="hover:text-accent transition-colors">零信任資安防護</a></li>
+                        <li><a href="#smart-home" class="hover:text-accent transition-colors">智慧空間與家電整合</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold mb-6 tracking-wider">聯絡總部</h4>
+                    <ul class="space-y-4 text-slate-400 text-sm">
+                        <li class="flex items-start"><i data-lucide="map-pin" class="w-4 h-4 mr-3 mt-1 text-slate-500"></i> 台北市中山區復興北路48號10樓</li>
+                        <li class="flex items-center"><i data-lucide="phone" class="w-4 h-4 mr-3 text-slate-500"></i> 02-2430-3099</li>
+                        <li class="flex items-center"><i data-lucide="mail" class="w-4 h-4 mr-3 text-slate-500"></i> info@goldensquare.com.tw</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="flex flex-col md:flex-row justify-between items-center text-center md:text-left text-sm text-slate-500">
+                <div class="mb-4 md:mb-0">
+                    <p class="font-medium">
+                        Copyright &copy; 2026 金坊科技股份有限公司 (Golden Square LTD). 
+                        <span class="block sm:inline sm:ml-2">All rights reserved.</span>
+                    </p>
+                    <p class="text-xs text-slate-600 mt-1">統一編號：5576-4043</p>
+                </div>
+                <div class="flex space-x-6 text-slate-500">
+                    <a href="#" class="hover:text-white transition-colors">隱私權政策</a>
+                    <a href="#" class="hover:text-white transition-colors">服務條款</a>
+                    <a href="#" class="hover:text-white transition-colors">資訊安全宣告</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 初始化與路由邏輯 -->
+    <script>
+        // 確保所有 DOM 元素皆載入後才執行 JavaScript
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. 初始化 Lucide Icons
+            lucide.createIcons();
+
+            // 2. SPA 分頁路由邏輯 (加入 hardware)
+            const pages = ['home', 'about', 'services', 'hardware', 'smart-home', 'cases', 'insights', 'contact'];
+            
+            function navigateTo(hash) {
+                const targetPage = hash.replace('#', '') || 'home';
+                
+                if (!pages.includes(targetPage)) {
+                    window.location.hash = 'home';
+                    return;
+                }
+
+                document.querySelectorAll('.page-content').forEach(page => {
+                    page.classList.remove('active');
+                });
+
+                const activePage = document.getElementById(`page-${targetPage}`);
+                if (activePage) {
+                    activePage.classList.add('active');
+                }
+
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.classList.remove('text-secondary', 'font-bold');
+                    link.classList.add('text-slate-600');
+                    if(link.getAttribute('href') === `#${targetPage}`) {
+                        link.classList.remove('text-slate-600');
+                        link.classList.add('text-secondary', 'font-bold');
+                    }
+                });
+
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            window.addEventListener('hashchange', () => {
+                navigateTo(window.location.hash);
+            });
+
+            if(!window.location.hash) {
+                window.location.hash = 'home'; 
+            } else {
+                navigateTo(window.location.hash);
+            }
+
+            // 3. 手機版選單
+            const btn = document.getElementById('mobile-menu-btn');
+            const menu = document.getElementById('mobile-menu');
+
+            if (btn && menu) {
+                btn.addEventListener('click', () => {
+                    menu.classList.toggle('hidden');
+                });
+
+                const mobileLinks = menu.querySelectorAll('a');
+                mobileLinks.forEach(link => {
+                    link.addEventListener('click', () => {
+                        menu.classList.add('hidden');
+                    });
+                });
+            }
+
+            // 4. 表單送出模擬
+            const form = document.getElementById('contact-form');
+            const successMsg = document.getElementById('success-msg');
+
+            if (form) {
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault(); 
+                    
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        const originalHTML = submitBtn.innerHTML;
+                        submitBtn.innerHTML = '安全傳送中... <i data-lucide="loader-2" class="w-5 h-5 ml-2 animate-spin"></i>';
+                        lucide.createIcons();
+                        submitBtn.disabled = true;
+                        submitBtn.classList.add('opacity-80');
+
+                        setTimeout(() => {
+                            if (successMsg) successMsg.classList.remove('hidden');
+                            form.reset();
+                            
+                            submitBtn.innerHTML = originalHTML;
+                            lucide.createIcons();
+                            submitBtn.disabled = false;
+                            submitBtn.classList.remove('opacity-80');
+
+                            setTimeout(() => {
+                                if (successMsg) successMsg.classList.add('hidden');
+                            }, 5000);
+                        }, 1500);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
